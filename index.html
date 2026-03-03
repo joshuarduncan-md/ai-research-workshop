@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Co-Pilot: Interactive Journal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { color: #003366; margin: 0; }
+        .rules { background-color: #ffcccc; border-left: 5px solid #cc0000; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .nav-buttons { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #e0e0e0; transition: 0.3s; }
+        button.active { background-color: #003366; color: white; }
+        button:hover:not(.active) { background-color: #ccc; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .instruction-box { background-color: #e6f0fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .prompt-box { background-color: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
+        .debrief { background-color: #fff9e6; border-left: 5px solid #ffcc00; padding: 15px; margin-top: 20px; }
+        .submit-btn { background-color: #009900; color: white; font-size: 1.1em; width: 100%; padding: 15px; margin-top: 30px; }
+        .submit-btn:hover { background-color: #007700; }
+        @media print {
+            .nav-buttons, .submit-btn { display: none; }
+            .section { display: block !important; margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+            body { background: white; }
+            .container { box-shadow: none; padding: 0; }
+            textarea { border: none; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>AI as Your Research Co-Pilot</h1>
+        <p>Interactive Experiential Learning Journal</p>
+    </div>
+
+    <div class="rules">
+        <strong>🚨 Reminder:</strong> NO PHI. Never input patient data into an LLM. Trust nothing; verify everything. You are the PI; the AI is the intern.
+    </div>
+
+    <div class="nav-buttons" id="nav-container">
+        </div>
+
+    <div id="content-container">
+        </div>
+
+    <button class="submit-btn" onclick="window.print()">🖨️ Export / Print Journal for Canvas Submission</button>
+</div>
+
+<script>
+    const cycles = [
+        {
+            title: "1. Gaps",
+            [cite_start]instructions: "Identify a key research gap in a topic of interest to you[cite: 45]. [cite_start]Test the poor prompt, then test the strong prompt[cite: 46, 47]. [cite_start]Compare the results[cite: 48].",
+            poor: "Write a literature review on [Topic], tell me what the research gaps are, and include citations.",
+            strong: "Act as a research librarian. I am interested in [Topic]. What are 3 under-researched areas? Do not generate citations. Provide a Boolean search string and MeSH terms for PubMed.",
+            debriefQ: "Did the AI hallucinate a fake DOI or author in the first test? How do we verify gaps using the provided search strings?"
+        },
+        {
+            title: "2. Aims",
+            [cite_start]instructions: "Draft a 1-sentence hypothesis for your project[cite: 67]. [cite_start]Feed it to the AI using the 'Critical PI' prompt[cite: 68]. [cite_start]Review the AI's feasibility feedback[cite: 69].",
+            poor: "Write my Specific Aims page based on this hypothesis: [Your Hypothesis].",
+            strong: "My hypothesis is [Your Hypothesis]. I have 3 months. Act as a critical PI. Critique this for feasibility and suggest how to structure this into 3 Specific Aims.",
+            debriefQ: "Did the AI change the core scientific meaning of your hypothesis? How do you ensure the thought remains yours?"
+        },
+        {
+            title: "3. Methods",
+            [cite_start]instructions: "Pick a study design[cite: 83]. [cite_start]Ask the AI what statistical test to use for your specific variables[cite: 84]. [cite_start]Follow up by asking for the limitations[cite: 85].",
+            poor: "What is the best way to study this dataset to get a significant p-value?",
+            strong: "I am designing a [Study Type]. My independent variable is [X] and dependent is [Y]. What statistical tests are appropriate, and what are their limitations?",
+            debriefQ: "Did the AI suggest a statistical test you've never heard of? How might bias creep into study design if the AI dictates inclusion criteria?"
+        },
+        {
+            title: "4. Coding",
+            [cite_start]instructions: "Think of three variables you might collect[cite: 98]. [cite_start]Prompt the AI to write an R or Python script to generate a summary table[cite: 99]. [cite_start]Review the logical output[cite: 100].",
+            poor: "Here is my patient data [paste dummy CSV]. Clean it and run a regression.",
+            strong: "Act as a biostatistician. I have a dataset with dummy variables [A, B, C]. Write an R/Python script to handle missing values and generate a demographic summary table.",
+            debriefQ: "Even with de-identified names, what combination of variables could constitute a HIPAA violation? How do we prevent accidental p-hacking?"
+        },
+        {
+            title: "5. Visuals",
+            [cite_start]instructions: "Think of a visual abstract for your topic[cite: 114]. [cite_start]Ask the AI to outline it[cite: 115]. [cite_start]Have the AI generate a formal academic disclosure statement[cite: 116].",
+            poor: "Make a graph showing my drug works better than the placebo.",
+            strong: "Draft an outline for a visual abstract for my paper on [topic]. Suggest an icon layout for 3 panels. Write a formal disclosure statement for using AI.",
+            debriefQ: "Whose intellectual property is an AI-generated visual abstract? How do we clearly disclose AI use to avoid misleading peers?"
+        },
+        {
+            title: "6. Polish",
+            [cite_start]instructions: "Draft a quick, messy 3-sentence paragraph[cite: 130]. [cite_start]Test the poor 'rewrite' prompt[cite: 131]. [cite_start]Then test the strong 'strict copyeditor' prompt[cite: 132]. [cite_start]Compare your feeling of ownership[cite: 133].",
+            poor: "Rewrite this to sound like a Harvard professor: [Your messy draft]",
+            strong: "Act as a strict copyeditor. Review this for clarity and flow. Point out errors and suggest minor tweaks for smoother transitions without changing my meaning: [Your messy draft]",
+            debriefQ: "Where is the line between copyediting and ghostwriting? If the AI rewrites your discussion entirely, is it still your paper?"
+        }
+    ];
+
+    const navContainer = document.getElementById('nav-container');
+    const contentContainer = document.getElementById('content-container');
+
+    // Load saved data from localStorage
+    const savedData = JSON.parse(localStorage.getItem('aiWorkshopData')) || {};
+
+    cycles.forEach((cycle, index) => {
+        // Build Nav Buttons
+        const btn = document.createElement('button');
+        btn.innerText = cycle.title;
+        btn.className = index === 0 ? 'active' : '';
+        btn.onclick = () => showSection(index);
+        navContainer.appendChild(btn);
+
+        // Build Sections
+        const section = document.createElement('div');
+        section.className = `section ${index === 0 ? 'active' : ''}`;
+        section.id = `section-${index}`;
+        
+        section.innerHTML = `
+            <h2>Cycle ${cycle.title}</h2>
+            <div class="instruction-box">
+                <strong>Activity:</strong> ${cycle.instructions}
+            </div>
+            
+            <p><strong>❌ 1. Try the Poor Prompt:</strong></p>
+            <div class="prompt-box">${cycle.poor}</div>
+            
+            <p><strong>✅ 2. Try the Strong Prompt:</strong></p>
+            <div class="prompt-box">${cycle.strong}</div>
+            
+            <p><strong>📝 3. Paste the AI's best output or your observations here:</strong></p>
+            <textarea id="obs-${index}" placeholder="Paste AI response or your notes here..." oninput="saveData()">${savedData[`obs-${index}`] || ''}</textarea>
+            
+            <div class="debrief">
+                <strong>🤔 Debrief & Ethics:</strong> ${cycle.debriefQ}
+            </div>
+            <textarea id="deb-${index}" placeholder="Type your reflection here..." oninput="saveData()">${savedData[`deb-${index}`] || ''}</textarea>
+        `;
+        contentContainer.appendChild(section);
+    });
+
+    function showSection(activeIndex) {
+        document.querySelectorAll('.nav-buttons button').forEach((btn, i) => {
+            btn.className = i === activeIndex ? 'active' : '';
+        });
+        document.querySelectorAll('.section').forEach((sec, i) => {
+            sec.className = i === activeIndex ? 'section active' : 'section';
+        });
+    }
+
+    function saveData() {
+        const data = {};
+        cycles.forEach((_, index) => {
+            data[`obs-${index}`] = document.getElementById(`obs-${index}`).value;
+            data[`deb-${index}`] = document.getElementById(`deb-${index}`).value;
+        });
+        localStorage.setItem('aiWorkshopData', JSON.stringify(data));
+    }
+</script>
+
+</body>
+</html>
