@@ -56,63 +56,60 @@
     const cycles = [
         {
             title: "1. Gaps",
-            [cite_start]instructions: "Identify a key research gap in a topic of interest to you[cite: 45]. [cite_start]Test the poor prompt, then test the strong prompt[cite: 46, 47]. [cite_start]Compare the results[cite: 48].",
+            instructions: "Identify a key research gap in a topic of interest to you. Test the poor prompt, then test the strong prompt. Compare the results.",
             poor: "Write a literature review on [Topic], tell me what the research gaps are, and include citations.",
             strong: "Act as a research librarian. I am interested in [Topic]. What are 3 under-researched areas? Do not generate citations. Provide a Boolean search string and MeSH terms for PubMed.",
             debriefQ: "Did the AI hallucinate a fake DOI or author in the first test? How do we verify gaps using the provided search strings?"
         },
         {
             title: "2. Aims",
-            [cite_start]instructions: "Draft a 1-sentence hypothesis for your project[cite: 67]. [cite_start]Feed it to the AI using the 'Critical PI' prompt[cite: 68]. [cite_start]Review the AI's feasibility feedback[cite: 69].",
-            poor: "Write my Specific Aims page based on this hypothesis: [Your Hypothesis].",
-            strong: "My hypothesis is [Your Hypothesis]. I have 3 months. Act as a critical PI. Critique this for feasibility and suggest how to structure this into 3 Specific Aims.",
-            debriefQ: "Did the AI change the core scientific meaning of your hypothesis? How do you ensure the thought remains yours?"
+            instructions: "Draft a 1-sentence hypothesis for your project. Feed it to the AI using the 'Critical PI' prompt. Review the AI's feasibility feedback.",
+            poor: "Write my Specific Aims page for a study on diabetes and wearables.",
+            strong: "My core hypothesis is [hypothesis]. I have 4 months to complete this. Act as a critical PI. Point out feasibility flaws and suggest an outline for how to structure my Specific Aims page based on my hypothesis.",
+            debriefQ: "Did the AI change the core scientific meaning of your hypothesis? How do we ensure the original thought remains yours while using AI to format the Aims?"
         },
         {
             title: "3. Methods",
-            [cite_start]instructions: "Pick a study design[cite: 83]. [cite_start]Ask the AI what statistical test to use for your specific variables[cite: 84]. [cite_start]Follow up by asking for the limitations[cite: 85].",
+            instructions: "Pick a study design for your proposed research topic. Ask the AI what statistical test to use for your specific variables. Challenge: Follow up by asking the AI for specific limitations.",
             poor: "What is the best way to study this dataset to get a significant p-value?",
-            strong: "I am designing a [Study Type]. My independent variable is [X] and dependent is [Y]. What statistical tests are appropriate, and what are their limitations?",
-            debriefQ: "Did the AI suggest a statistical test you've never heard of? How might bias creep into study design if the AI dictates inclusion criteria?"
+            strong: "I am doing a retrospective chart review. Variables are X and Y. What are the standard statistical tests used for this data structure, and what are their limitations?",
+            debriefQ: "Did the AI suggest a statistical test you've never heard of? How might bias creep into study design if we let the AI dictate the inclusion criteria?"
         },
         {
             title: "4. Coding",
-            [cite_start]instructions: "Think of three variables you might collect[cite: 98]. [cite_start]Prompt the AI to write an R or Python script to generate a summary table[cite: 99]. [cite_start]Review the logical output[cite: 100].",
-            poor: "Here is my patient data [paste dummy CSV]. Clean it and run a regression.",
-            strong: "Act as a biostatistician. I have a dataset with dummy variables [A, B, C]. Write an R/Python script to handle missing values and generate a demographic summary table.",
-            debriefQ: "Even with de-identified names, what combination of variables could constitute a HIPAA violation? How do we prevent accidental p-hacking?"
+            instructions: "Think of three variables you might collect. Prompt the AI to write an R or Python script to generate a basic demographic summary table. Review: Does it make logical sense?",
+            poor: "Here is my patient data [csv file]. Clean it and run a regression.",
+            strong: "I am using R. I have dummy variables named Age, BMI, and BP. Write an R script to check for missing values and create a basic demographic summary table.",
+            debriefQ: "Even if we de-identify names, what combination of variables could constitute a HIPAA violation? How do we prevent the AI's script from manipulating our data or p-hacking?"
         },
         {
             title: "5. Visuals",
-            [cite_start]instructions: "Think of a visual abstract for your topic[cite: 114]. [cite_start]Ask the AI to outline it[cite: 115]. [cite_start]Have the AI generate a formal academic disclosure statement[cite: 116].",
+            instructions: "Think of a visual abstract for your topic. Ask the AI to outline a visual abstract. Have the AI generate a formal academic disclosure statement for using AI.",
             poor: "Make a graph showing my drug works better than the placebo.",
-            strong: "Draft an outline for a visual abstract for my paper on [topic]. Suggest an icon layout for 3 panels. Write a formal disclosure statement for using AI.",
-            debriefQ: "Whose intellectual property is an AI-generated visual abstract? How do we clearly disclose AI use to avoid misleading peers?"
+            strong: "Suggest a layout for a scientific poster based on my abstract. What icons should I use? Also, provide a standard AI-disclosure sentence I can print on the poster.",
+            debriefQ: "If an AI generates a visual abstract, whose intellectual property is it? How do we clearly disclose AI use in our publications so we don't mislead our peers?"
         },
         {
             title: "6. Polish",
-            [cite_start]instructions: "Draft a quick, messy 3-sentence paragraph[cite: 130]. [cite_start]Test the poor 'rewrite' prompt[cite: 131]. [cite_start]Then test the strong 'strict copyeditor' prompt[cite: 132]. [cite_start]Compare your feeling of ownership[cite: 133].",
-            poor: "Rewrite this to sound like a Harvard professor: [Your messy draft]",
-            strong: "Act as a strict copyeditor. Review this for clarity and flow. Point out errors and suggest minor tweaks for smoother transitions without changing my meaning: [Your messy draft]",
-            debriefQ: "Where is the line between copyediting and ghostwriting? If the AI rewrites your discussion entirely, is it still your paper?"
+            instructions: "Draft a quick, messy 3-sentence paragraph. Ask the AI to 'Rewrite this to sound like a Harvard professor'. Then ask it to 'Point out grammatical errors and suggest 1 minor tweak for flow'. Compare the feeling of ownership.",
+            poor: "Rewrite my whole discussion section to sound like a Harvard professor.",
+            strong: "Act as a strict copyeditor. Review this paragraph for clarity. Highlight any confusing sentences and suggest minor tweaks to improve transition flow without changing my meaning: [draft]",
+            debriefQ: "Where is the line between copyediting and ghostwriting? If the AI rewrites your discussion section entirely, is it still your paper?"
         }
     ];
 
     const navContainer = document.getElementById('nav-container');
     const contentContainer = document.getElementById('content-container');
 
-    // Load saved data from localStorage
     const savedData = JSON.parse(localStorage.getItem('aiWorkshopData')) || {};
 
     cycles.forEach((cycle, index) => {
-        // Build Nav Buttons
         const btn = document.createElement('button');
         btn.innerText = cycle.title;
         btn.className = index === 0 ? 'active' : '';
         btn.onclick = () => showSection(index);
         navContainer.appendChild(btn);
 
-        // Build Sections
         const section = document.createElement('div');
         section.className = `section ${index === 0 ? 'active' : ''}`;
         section.id = `section-${index}`;
@@ -129,35 +126,4 @@
             <p><strong>✅ 2. Try the Strong Prompt:</strong></p>
             <div class="prompt-box">${cycle.strong}</div>
             
-            <p><strong>📝 3. Paste the AI's best output or your observations here:</strong></p>
-            <textarea id="obs-${index}" placeholder="Paste AI response or your notes here..." oninput="saveData()">${savedData[`obs-${index}`] || ''}</textarea>
-            
-            <div class="debrief">
-                <strong>🤔 Debrief & Ethics:</strong> ${cycle.debriefQ}
-            </div>
-            <textarea id="deb-${index}" placeholder="Type your reflection here..." oninput="saveData()">${savedData[`deb-${index}`] || ''}</textarea>
-        `;
-        contentContainer.appendChild(section);
-    });
-
-    function showSection(activeIndex) {
-        document.querySelectorAll('.nav-buttons button').forEach((btn, i) => {
-            btn.className = i === activeIndex ? 'active' : '';
-        });
-        document.querySelectorAll('.section').forEach((sec, i) => {
-            sec.className = i === activeIndex ? 'section active' : 'section';
-        });
-    }
-
-    function saveData() {
-        const data = {};
-        cycles.forEach((_, index) => {
-            data[`obs-${index}`] = document.getElementById(`obs-${index}`).value;
-            data[`deb-${index}`] = document.getElementById(`deb-${index}`).value;
-        });
-        localStorage.setItem('aiWorkshopData', JSON.stringify(data));
-    }
-</script>
-
-</body>
-</html>
+            <p><strong>📝 3
