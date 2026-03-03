@@ -44,10 +44,10 @@
     </div>
 
     <div class="nav-buttons" id="nav-container">
-        </div>
+    </div>
 
     <div id="content-container">
-        </div>
+    </div>
 
     <button class="submit-btn" onclick="window.print()">🖨️ Export / Print Journal for Canvas Submission</button>
 </div>
@@ -100,7 +100,6 @@
 
     const navContainer = document.getElementById('nav-container');
     const contentContainer = document.getElementById('content-container');
-
     const savedData = JSON.parse(localStorage.getItem('aiWorkshopData')) || {};
 
     cycles.forEach((cycle, index) => {
@@ -126,4 +125,35 @@
             <p><strong>✅ 2. Try the Strong Prompt:</strong></p>
             <div class="prompt-box">${cycle.strong}</div>
             
-            <p><strong>📝 3
+            <p><strong>📝 3. Paste the AI's best output or your observations here:</strong></p>
+            <textarea id="obs-${index}" placeholder="Paste AI response or your notes here..." oninput="saveData()">${savedData['obs-'+index] || ''}</textarea>
+            
+            <div class="debrief">
+                <strong>🤔 Debrief & Ethics:</strong> ${cycle.debriefQ}
+            </div>
+            <textarea id="deb-${index}" placeholder="Type your reflection here..." oninput="saveData()">${savedData['deb-'+index] || ''}</textarea>
+        `;
+        contentContainer.appendChild(section);
+    });
+
+    function showSection(activeIndex) {
+        document.querySelectorAll('.nav-buttons button').forEach((btn, i) => {
+            btn.className = i === activeIndex ? 'active' : '';
+        });
+        document.querySelectorAll('.section').forEach((sec, i) => {
+            sec.className = i === activeIndex ? 'section active' : 'section';
+        });
+    }
+
+    function saveData() {
+        const data = {};
+        cycles.forEach((_, index) => {
+            data['obs-'+index] = document.getElementById('obs-'+index).value;
+            data['deb-'+index] = document.getElementById('deb-'+index).value;
+        });
+        localStorage.setItem('aiWorkshopData', JSON.stringify(data));
+    }
+</script>
+
+</body>
+</html>
